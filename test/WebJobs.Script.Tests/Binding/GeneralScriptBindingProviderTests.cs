@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.Azure.WebJobs.Script.Binding;
 using Microsoft.Azure.WebJobs.Script.Extensibility;
@@ -37,6 +38,34 @@ namespace Microsoft.Azure.WebJobs.Script.Tests
             jobj["datatype"] = dataType;
             jobj["cardinality"] = cardinality;
             return new ScriptBindingContext(jobj);
+        }
+
+        [Fact]
+        public void ManualTest()
+        {
+            JobHostConfiguration config = new JobHostConfiguration();
+            config.UseScriptExtensions();
+            TestTraceWriter traceWriter = new TestTraceWriter(TraceLevel.Verbose);
+            JObject hostMetadata = new JObject();
+            var provider = new GeneralScriptBindingProvider(config, hostMetadata, traceWriter);
+            provider.CompleteInitialization();
+
+            JObject bindingMetadata = new JObject
+            {
+                { "type", "manualTrigger" },
+                { "name", "test" },
+                { "direction", "in" }
+            };
+
+            ScriptBindingContext context = new ScriptBindingContext(bindingMetadata);
+            ScriptBinding binding = null;
+            bool created = provider.TryCreate(context, out binding);
+
+            Assert.True(created);
+            Assert.Equal(typeof(string), binding.DefaultType);
+
+            var attr = binding.GetAttributes()[0];
+            Assert.IsType<ManualTriggerAttribute>(attr);
         }
     }
 }

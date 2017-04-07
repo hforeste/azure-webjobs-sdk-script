@@ -443,7 +443,7 @@ namespace Microsoft.Azure.WebJobs.Script.Tests
             scriptConfig.HostConfig.HostConfigMetadata = config;
             TraceWriter traceWriter = new TestTraceWriter(TraceLevel.Verbose);
 
-            scriptConfig.HostConfig.GetTooling(); // will cause extensions to initialize and consume config metadata. 
+            scriptConfig.HostConfig.CreateMetadataProvider(); // will cause extensions to initialize and consume config metadata. 
 
             Assert.Equal(60 * 1000, scriptConfig.HostConfig.Queues.MaxPollingInterval.TotalMilliseconds);
             Assert.Equal(16, scriptConfig.HostConfig.Queues.BatchSize);
@@ -459,7 +459,7 @@ namespace Microsoft.Azure.WebJobs.Script.Tests
 
             scriptConfig = new ScriptHostConfiguration();
             scriptConfig.HostConfig.HostConfigMetadata = config;
-            scriptConfig.HostConfig.GetTooling(); // will cause extensions to initialize and consume config metadata. 
+            scriptConfig.HostConfig.CreateMetadataProvider(); // will cause extensions to initialize and consume config metadata. 
 
             Assert.Equal(5000, scriptConfig.HostConfig.Queues.MaxPollingInterval.TotalMilliseconds);
             Assert.Equal(17, scriptConfig.HostConfig.Queues.BatchSize);

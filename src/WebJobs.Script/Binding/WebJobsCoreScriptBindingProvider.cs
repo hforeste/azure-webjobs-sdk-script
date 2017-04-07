@@ -24,8 +24,6 @@ namespace Microsoft.Azure.WebJobs.Script.Binding
 
         public override void Initialize()
         {
-           // Extensions will already apply configuraiton 
-
             // Apply Blobs configuration
             Config.Blobs.CentralizedPoisonQueue = true;   // TEMP : In the next release we'll remove this and accept the core SDK default
             var configSection = (JObject)Metadata["blobs"];
@@ -54,12 +52,7 @@ namespace Microsoft.Azure.WebJobs.Script.Binding
             {
                 binding = new HttpScriptBinding(context);
             }
-            else if (string.Compare(context.Type, "manualTrigger", StringComparison.OrdinalIgnoreCase) == 0)
-            {
-                binding = new ManualScriptBinding(context);
-            }
-            // Queue, Table handled by general case. 
-
+           
             return binding != null;
         }
 
@@ -85,30 +78,6 @@ namespace Microsoft.Azure.WebJobs.Script.Binding
                 {
                     RouteTemplate = Context.GetMetadataValue<string>("route")
                 });
-
-                return attributes;
-            }
-        }
-
-        private class ManualScriptBinding : ScriptBinding
-        {
-            public ManualScriptBinding(ScriptBindingContext context) : base(context)
-            {
-            }
-
-            public override Type DefaultType
-            {
-                get
-                {
-                    return typeof(string);
-                }
-            }
-
-            public override Collection<Attribute> GetAttributes()
-            {
-                Collection<Attribute> attributes = new Collection<Attribute>();
-
-                attributes.Add(new ManualTriggerAttribute());
 
                 return attributes;
             }

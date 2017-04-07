@@ -171,16 +171,16 @@ namespace Microsoft.Azure.WebJobs.Script.WebHost.Controllers
             return base.ExecuteAsync(controllerContext, cancellationToken);
         }
 
-        [Route("admin/hook/{name}")]
+        [Route("admin/hooks/{name}")]
         [HttpGet]
         [HttpPost]
         [AllowAnonymous]
         public async Task<HttpResponseMessage> ExtensionHook(string name, CancellationToken token)
         {
-            var provider = this._scriptHostManager.BindingWebhookProvider;
+            var provider = this._scriptHostManager.BindingWebHookProvider;
 
-            IAsyncConverter<HttpRequestMessage, HttpResponseMessage> hook;
-            if (provider.CustomHttpHandlers.TryGetValue(name, out hook))
+            var hook = provider.GetHandlerOrNull(name);
+            if (hook != null)
             {
                 var response = await hook.ConvertAsync(this.Request, token);
                 return response;
@@ -190,7 +190,7 @@ namespace Microsoft.Azure.WebJobs.Script.WebHost.Controllers
         }
 
         // Provides the URL for accessing the admin/hook route. 
-        internal static Uri GetExtensionHook(string name)
+        internal static Uri GetRouteForExtensionHook(string name)
         {
             var settings = ScriptSettingsManager.Instance;
 
@@ -203,7 +203,7 @@ namespace Microsoft.Azure.WebJobs.Script.WebHost.Controllers
             bool isLocalhost = string.Equals("localhost", hostName, StringComparison.OrdinalIgnoreCase);
             var scheme = isLocalhost ? "http" : "https";
 
-            return new Uri($"{scheme}://{hostName}/admin/hook/{name}");
+            return new Uri($"{scheme}://{hostName}/admin/hooks/{name}");
         }
     }
 }

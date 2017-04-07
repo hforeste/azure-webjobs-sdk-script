@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Reflection;
 using Microsoft.Azure.WebJobs.Extensions.SendGrid;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Script.Binding;
@@ -24,7 +25,7 @@ namespace Microsoft.Azure.WebJobs.Script.Tests
             JObject hostMetadata = new JObject();
 
             var provider = new GeneralScriptBindingProvider(config, hostMetadata, traceWriter);
-            provider.FinishInit();
+            provider.CompleteInitialization();
             _provider = provider;
         }
 
@@ -87,6 +88,21 @@ namespace Microsoft.Azure.WebJobs.Script.Tests
             Assert.True(created);
             Assert.Same(binding.Context, context);
             Assert.Same(typeof(IAsyncCollector<JObject>), binding.DefaultType);
+        }
+
+        [Fact]
+        public void TryResolveAssemblies()
+        {
+            // Verify that we can resolve references to the native SendGrid SDK. 
+            Assembly expectedAssembly = typeof(SendGrid.SendGridAPIClient).Assembly;
+            Assembly assembly;
+            bool resolved = _provider.TryResolveAssembly(expectedAssembly.GetName().FullName, out assembly);
+            Assert.True(resolved);
+            Assert.Same(expectedAssembly, assembly);
+
+            resolved = _provider.TryResolveAssembly(expectedAssembly.GetName().Name, out assembly);
+            Assert.True(resolved);
+            Assert.Same(expectedAssembly, assembly);
         }
 
         [Fact]

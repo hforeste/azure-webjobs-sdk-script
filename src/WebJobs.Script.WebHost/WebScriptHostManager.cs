@@ -41,7 +41,7 @@ namespace Microsoft.Azure.WebJobs.Script.WebHost
         private readonly ISwaggerDocumentManager _swaggerDocumentManager;
         private readonly object _syncLock = new object();
 
-        private readonly WebJobsSdkExtensionHookProvider _bindingWebhookProvider = new WebJobsSdkExtensionHookProvider();
+        private readonly WebJobsSdkExtensionHookProvider _bindingWebHookProvider = new WebJobsSdkExtensionHookProvider();
 
         private bool _warmupComplete = false;
         private bool _hostStarted = false;
@@ -77,7 +77,7 @@ namespace Microsoft.Azure.WebJobs.Script.WebHost
         {
         }
 
-        internal WebJobsSdkExtensionHookProvider BindingWebhookProvider => _bindingWebhookProvider;
+        internal WebJobsSdkExtensionHookProvider BindingWebHookProvider => _bindingWebHookProvider;
 
         public ISecretManager SecretManager => _secretManager;
 
@@ -401,7 +401,7 @@ namespace Microsoft.Azure.WebJobs.Script.WebHost
             var hostConfig = config.HostConfig;
             hostConfig.AddService<IMetricsLogger>(_metricsLogger);
 
-            config.HostConfig.AddService<IWebhookProvider>(this._bindingWebhookProvider);
+            config.HostConfig.AddService<IWebHookProvider>(this._bindingWebHookProvider);
 
             // Add our exception handler
             hostConfig.AddService<IWebJobsExceptionHandler>(_exceptionHandler);

@@ -12,13 +12,20 @@ namespace Microsoft.Azure.WebJobs.Script.WebHost
 {
     // Gives binding extensions access to a http handler. 
     // This is registered with the JobHostConfiguration and extensions will call on it to register for a handler. 
-    internal class WebJobsSdkExtensionHookProvider : IWebhookProvider
+    internal class WebJobsSdkExtensionHookProvider : IWebHookProvider
     {
         // Map from an extension name to a http handler. 
         private IDictionary<string, HttpHandler> _customHttpHandlers = new Dictionary<string, HttpHandler>(StringComparer.OrdinalIgnoreCase);
 
-        public IDictionary<string, HttpHandler> CustomHttpHandlers => _customHttpHandlers;
+        // Get a registered handler, or null
+        public HttpHandler GetHandlerOrNull(string name)
+        {
+            HttpHandler handler;
+            _customHttpHandlers.TryGetValue(name, out handler);
+            return handler;
+        }
 
+        // Exposed to extensions to get get the URL for their http handler. 
         public Uri GetUrl(IExtensionConfigProvider extension)
         {
             var extensionType = extension.GetType();
@@ -31,7 +38,7 @@ namespace Microsoft.Azure.WebJobs.Script.WebHost
             string name = extensionType.Name;
             _customHttpHandlers[name] = handler;
 
-            return AdminController.GetExtensionHook(name);
+            return AdminController.GetRouteForExtensionHook(name);
         }
     }
 }

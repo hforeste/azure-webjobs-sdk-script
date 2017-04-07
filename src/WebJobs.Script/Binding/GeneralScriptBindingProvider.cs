@@ -14,13 +14,13 @@ using System.Collections.Generic;
 namespace Microsoft.Azure.WebJobs.Script.Binding
 {
     // This single binder can service all SDK extensions by leveraging the SDK metadata provider. 
-    public class GeneralScriptBindingProvider : ScriptBindingProvider
-    {        
-        private IJobHostMetadataProvider _tooling;
-                
+    internal class GeneralScriptBindingProvider : ScriptBindingProvider
+    {
+        private IJobHostMetadataProvider _metadataProvider;
+
         public GeneralScriptBindingProvider(
-            JobHostConfiguration config, 
-            JObject hostMetadata, 
+            JobHostConfiguration config,
+            JObject hostMetadata,
             TraceWriter traceWriter) :
             base(config, hostMetadata, traceWriter)
         {
@@ -29,36 +29,36 @@ namespace Microsoft.Azure.WebJobs.Script.Binding
         // The constructor is fixed and ScriptBindingProvider are instantated for us by the Script runtime. 
         // Extensions may get registered after this class is instantiated. 
         // So we need a final call that lets us get the tooling snapshot of the graph after all extensions are set. 
-        public void FinishInit()
+        public void CompleteInitialization()
         {
-            this._tooling  = this.Config.GetTooling();
+            this._metadataProvider = this.Config.CreateMetadataProvider();
         }
 
         public override bool TryCreate(ScriptBindingContext context, out ScriptBinding binding)
         {
             string name = context.Type;
-            var attrType = this._tooling.GetAttributeTypeFromName(name);
+            var attrType = this._metadataProvider.GetAttributeTypeFromName(name);
             if (attrType == null)
             {
                 binding = null;
                 return false;
             }
 
-            var attr = this._tooling.GetAttribute(attrType, context.Metadata);
-                        
-            binding = new GeneralScriptBinding(this._tooling, attr, context);
+            var attr = this._metadataProvider.GetAttribute(attrType, context.Metadata);
+
+            binding = new GeneralScriptBinding(this._metadataProvider, attr, context);
             return true;
         }
 
         public override bool TryResolveAssembly(string assemblyName, out Assembly assembly)
         {
-            return this._tooling.TryResolveAssembly(assemblyName, out assembly);
+            return this._metadataProvider.TryResolveAssembly(assemblyName, out assembly);
         }
 
 
         // Function.json specifies a type via optional DataType and Cardinality properties. 
         // Read the properties and convert that into a System.Type. 
-        public static Type GetRequestedType(ScriptBindingContext context)
+        internal static Type GetRequestedType(ScriptBindingContext context)
         {
             Type type = ParseDataType(context);
 
@@ -116,7 +116,7 @@ namespace Microsoft.Azure.WebJobs.Script.Binding
                 _tooling = tooling;
                 _attribute = attribute;
 
-                _applyReturn = attribute.GetType().GetMethod("ApplyReturn", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);              
+                _applyReturn = attribute.GetType().GetMethod("ApplyReturn", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
             }
 
             public bool CanProcessResult(object result)
@@ -125,20 +125,20 @@ namespace Microsoft.Azure.WebJobs.Script.Binding
             }
 
             public void ProcessResult(
-                IDictionary<string, object> functionArguments, 
-                object[] systemArguments, 
-                string triggerInputName, 
+                IDictionary<string, object> functionArguments,
+                object[] systemArguments,
+                string triggerInputName,
                 object result)
             {
                 if (result == null)
                 {
                     return;
                 }
-                                
+
                 object context;
                 if (functionArguments.TryGetValue(triggerInputName, out context))
                 {
-                    _applyReturn.Invoke(null, new object[] { context, result } );
+                    _applyReturn.Invoke(null, new object[] { context, result });
                 }
             }
 
@@ -149,7 +149,7 @@ namespace Microsoft.Azure.WebJobs.Script.Binding
                 get
                 {
                     if (_defaultType == null)
-                    {                        
+                    {
                         Type requestedType = GetRequestedType(this.Context);
                         _defaultType = _tooling.GetDefaultType(_attribute, this.Context.Access, requestedType);
                     }
@@ -157,7 +157,7 @@ namespace Microsoft.Azure.WebJobs.Script.Binding
                 }
             }
 
-            public override Collection<Attribute> GetAttributes() => new Collection<Attribute> { _attribute } ;            
+            public override Collection<Attribute> GetAttributes() => new Collection<Attribute> { _attribute };
         }
     }
 }
