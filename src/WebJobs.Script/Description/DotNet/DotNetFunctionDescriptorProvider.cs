@@ -206,7 +206,7 @@ namespace Microsoft.Azure.WebJobs.Script.Description
                 if (resultBinding.CanProcessResult(true))
                 {
                     // The trigger binding (ie, httpTrigger) will handle the return. 
-                    return true;
+                    return false;
                 }
             }
 
